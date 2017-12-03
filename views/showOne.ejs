@@ -20,13 +20,13 @@
 	<li>Building: <%=rest.building%></li>
 	<li>Zipcode: <%=rest.zipcode%></li>
 	<li>GPS:[<%=rest.coor%>]</li>
-	<li>Rating</li>
-	<ol><%var i=0;%>
+	<li>Rating:
+		<ol><%var i=0;%>
 		<% if (rest.rate != null){ %>
 		<%for(i=0;i<rest.rate.length;i++){%>
 			<li><%=rest.rate[i].score%> (<%=rest.rate[i].owner%>)</li>
 		<%}}%>
-	</ol>
+	</ol></li>
 	<li>Created by <%=rest.owner%></li>
 </ul>
 <a href="gmap?lon=<%=rest.coor[0]%>&lat=<%=rest.coor[1]%>&title=<%=rest.name%>">Google Map</a>
