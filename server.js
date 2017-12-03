@@ -7,7 +7,7 @@ var assert = require('assert');
 
 var MongoClient = require('mongodb').MongoClient;
 var ObjectId = require('mongodb').ObjectID;
-var mongourl = 'mongodb://dumyjj:baby78joy@ds139844.mlab.com:39844/dumyjj';
+var mongourl = 'user@ds125113.mlab.com:25113/cecilia0121';
 
 var session = require('cookie-session');
 var express = require('express');
