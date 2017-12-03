@@ -3,9 +3,11 @@ var http = require('http');
 var url  = require('url');
 var assert = require('assert');
 
+
+
 var MongoClient = require('mongodb').MongoClient;
 var ObjectId = require('mongodb').ObjectID;
-var mongourl = 'mongodb://user:user@ds125113.mlab.com:25113/cecilia0121';
+var mongourl = 'mongodb://dumyjj:baby78joy@ds139844.mlab.com:39844/dumyjj';
 
 var session = require('cookie-session');
 var express = require('express');
@@ -14,14 +16,15 @@ var app = express();
 var bodyParser = require('body-parser');
 
 //middlewares
-app.use(session({cookieName: 'session',keys: ['Cecilia','Julian ']}));
+app.use(session({cookieName: 'session',keys: ['Cecilia','Julian']}));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended : true}));
 app.use(fileUpload());
 
+
 //register
 app.get('/register', function(req,res,callback){
-	res.render('register.ejs');
+	res.render('register.ejs')
 	//res.sendFile(__dirname + '/public/register.html');
 });
 
@@ -44,7 +47,9 @@ app.post('/register', function(req, res) {
 		});
 	});
 });
+
 		
+
 function createUser(db,name,pw,callback) {
 	db.collection('user').insertOne({
 	"name" : name,
@@ -59,7 +64,6 @@ function createUser(db,name,pw,callback) {
 //login
 app.get('/',function(req,res) {
 	if (!req.session.authenticated) {
-		//res.sendFile(__dirname + '/public/login.html');
 		res.render('login.ejs');
 	}
 	else{
@@ -107,16 +111,17 @@ app.get('/logout', function(req,res,next) {
 	res.redirect('/');
 });
 
+
+
 //create
 app.get('/new',function(req,res) {
 	if (!req.session.authenticated) {
-		//res.sendFile(__dirname + '/public/login.html');
 		res.render('login.ejs');
 	} else {
-		//res.sendFile(__dirname + '/public/create.html');
 		res.render('create.ejs');
 	}
 });
+
 
 app.post('/create', function(req, res) {
 	var criteria = {"name" : req.body.name};
@@ -151,6 +156,7 @@ function create(db,owner,name,borough,cuisine,street,building,zipcode,lon,lat,bf
  	"cuisine" : cuisine,
 	"street" : street,
 	"building" : building,
+	"zipcode" :zipcode,
 	"coor" : [lon,lat],
 	"data" : new Buffer(bfile.data).toString('base64'),
 	"mimetype" : bfile.mimetype
@@ -168,6 +174,61 @@ function create(db,owner,name,borough,cuisine,street,building,zipcode,lon,lat,bf
 	);
 }
 
+
+//api/create
+/*app.post('/api/create', function(req, res) {
+	var criteria = {"name" : req.body.name};
+	MongoClient.connect(mongourl,function(err,db) {
+	  assert.equal(null,err);
+    	  findOneRestaurant(db,criteria,function(dbres) {
+	    if(dbres == null){
+		APIcreate(db, req.session.username, req.body.name, req.body.borough, req.body.cuisine, req.body.street,
+		  function(result) {
+	        	db.close();
+		  if (result.insertedId != null) {
+			res.redirect('/');
+		  } else {
+			res.end(JSON.stringify(result));
+		  }
+ 		  }
+		);
+	     } else {
+			res.redirect('/new');
+	     }
+	    });
+	});
+});
+
+function APIcreate(db,owner,name,borough,cuisine,street,building,zipcode,lon,lat,bfile,callback) {
+	db.collection('res').insertOne({
+		"owner" : owner,
+		"name" : name,
+		"address" : {
+			"street" : street
+			"borough" : borough,
+	 		"cuisine" : cuisine,
+			"street" : street,
+			"building" : building,
+			"coor" : [lon,lat],
+			"data" : new Buffer(bfile.data).toString('base64'),
+			"mimetype" : bfile.mimetype
+		}
+	}, 
+		function(err,result) {
+			if (err) {
+				result = err;
+				console.log("insertOne error: " + JSON.stringify(err));
+			} else {
+		  		console.log("status : OK,");
+				console.log("_id : " + result.insertedId);
+			}
+			callback(result);
+		}
+	);
+}
+*/
+
+
 function findOneRestaurant(db,criteria,callback) {
 		db.collection('res').findOne(criteria,function(err,result) {
 			assert.equal(err,null);
@@ -176,10 +237,13 @@ function findOneRestaurant(db,criteria,callback) {
 	);
 }
 
+
+
+
+
 //read
 app.get('/read', function(req,res) {
 	if (!req.session.authenticated) {
-		//res.sendFile(__dirname + '/public/login.html');
 		res.render('login.ejs');
 	} else {
 	  var criteria = req.query;
@@ -198,7 +262,6 @@ app.get('/read', function(req,res) {
 //api/read
 app.get('/api/read/:field/:value', function(req,res) {
 	if (!req.session.authenticated) {
-		//res.sendFile(__dirname + '/public/login.html');
 		res.render('login.ejs');
 	} else {
 	  var criteria = req.query;
@@ -242,7 +305,6 @@ function findRestaurant(db,criteria,callback) {
 //detail
 app.get('/detail', function(req,res) {
 	if (!req.session.authenticated) {
-		//res.sendFile(__dirname + '/public/login.html');
 		res.render('login.ejs');
 	} else {
 	 	var target = req.query.id;
@@ -261,13 +323,13 @@ function findDetail(db,target,callback) {
 			assert.equal(err,null);
 			callback(result);
 		});
-}
 
+
+}
 //change
 app.get('/change',function(req,res) {
 	if (!req.session.authenticated) {
 		res.render('login.ejs');
-		//res.sendFile(__dirname + '/public/login.html');
 	}
 	else{
 		MongoClient.connect(mongourl,function(err,db) {
@@ -276,7 +338,6 @@ app.get('/change',function(req,res) {
 				db.close();
 				if(result.owner!=req.session.username)
 					res.render('error.ejs');
-					//res.sendFile(__dirname + '/public/error.html');
 				else{
 					res.render('change.ejs',{result:result});
 				}
@@ -314,6 +375,7 @@ function commitChange(db,id,name,borough,cuisine,street,building,zipcode,lon,lat
  	"cuisine" : cuisine,
 	"street" : street,
 	"building" : building,
+	"zipcode" : zipcode,
 	"coor" : [lon,lat],
 	"data" : new Buffer(bfile.data).toString('base64'),
 	"mimetype" : bfile.mimetype
@@ -333,6 +395,7 @@ function commitChange(db,id,name,borough,cuisine,street,building,zipcode,lon,lat
  		"cuisine" : cuisine,
 		"street" : street,
 		"building" : building,
+		"zipcode" : zipcode,
 		"coor" : [lon,lat]
 	    }}, function(err,result) {
 		if (err) {
@@ -367,7 +430,6 @@ app.post('/rate',function(req,res) {
 app.get('/rate',function(req,res) {
 	if (!req.session.authenticated) {
 		res.render('login.ejs');
-		//res.sendFile(__dirname + '/public/login.html');
 	} else {
 	var resID = req.query.id;
 	res.render('rate.ejs',{res:resID});
@@ -377,7 +439,6 @@ app.get('/rate',function(req,res) {
 app.get('/gmap',function(req,res) {
 	if (!req.session.authenticated) {
 		res.render('login.ejs');
-		//res.sendFile(__dirname + '/public/login.html');
 	} else {
 	var lat = req.query.lat;
 	var lon = req.query.lon;
@@ -387,6 +448,10 @@ app.get('/gmap',function(req,res) {
 });
 
 function addRate(db,resID,resScore,rateOwner,callback) {
+	/*db.collection('rate').insert(
+	{"_id" : resID,
+	 "rate": {"score" :resScore,
+			"owner" :rateOwner}*/
 	db.collection('res').update(
 	{"_id" : resID},
 	{$push:
@@ -403,11 +468,12 @@ function addRate(db,resID,resScore,rateOwner,callback) {
 	);
 }
 
+
+
 //remove
 app.get('/remove', function(req, res,callback) {
 	if (!req.session.authenticated) {
 		res.render('login.ejs');
-		//res.sendFile(__dirname + '/public/login.html');
 	}
 	else{
 		MongoClient.connect(mongourl,function(err,db) {
@@ -419,7 +485,6 @@ app.get('/remove', function(req, res,callback) {
 						res.redirect('/');
 					else
 						res.render('error.ejs'); 
-						//res.sendFile(__dirname + '/public/error.html');   
 				}
 			);
 		});
@@ -434,6 +499,8 @@ function deleteRes(db,target,owner,callback) {
 		}
 	);
 }
+
+
 
 
 app.listen(process.env.PORT || 8099, function() {
