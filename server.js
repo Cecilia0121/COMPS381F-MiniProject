@@ -411,65 +411,30 @@ function commitChange(db,id,name,borough,cuisine,street,building,zipcode,lon,lat
 }
 
 //rate
-app.post('/rate', function (req, res) {
+app.post('/rate',function(req,res) {
 	var resID = req.body.id;
 	var resScore = req.body.score;
 	var rateOwner = req.session.username;
-	//var criteria =  {_id:req.body.id,rate:{$elemMatch:{owner:req.session.username}}};
-	MongoClient.connect(mongourl, function (err, db) {
-		assert.equal(err, null);
-		findRateUser(db,req.body.id,req.session.username,function(result){
-			console.log(JSON.stringify(result));
-			if (result == null) {
-				console.log('inserting rate for'+resID+','+resScore+','+rateOwner);
-				addRate(db, resID, resScore, rateOwner,
-					function (result) {
-						db.close();
-						res.redirect('/read');
-					}
-				);
-			}else{
-				res.sendFile(__dirname + '/public/errorRate.html');
-			}
-		});
-	});
+	MongoClient.connect(mongourl,function(err,db) {
+		assert.equal(err,null);
+		console.log('Connected to Database');
+		addRate(db,resID,resScore,rateOwner,
+		function(result) {
+			  db.close();
+			  res.redirect('/read');
+		} 
+	);
+      });
 });
 
-app.get('/rate', function (req, res) {
+app.get('/rate',function(req,res) {
 	if (!req.session.authenticated) {
-		res.sendFile(__dirname + '/public/login.html');
+		res.render('login.ejs');
 	} else {
-		var resID = req.query.id;
-		res.render('rate.ejs', { res: resID });
+	var resID = req.query.id;
+	res.render('rate.ejs',{res:resID});
 	}
 });
-
-function findRateUser(db,resID,rateOwner,callback){
-	db.collection('res').findOne({"_id":ObjectId(resID),"rate":{$elemMatch:{"owner":rateOwner}}},
-		function (err, result){
-			if(err){
-				result = err;
-				console.log("update: " + JSON.stringify(err));
-			}
-			callback(result);
-		}
-	);
-}
-
-function addRate(db, resID, resScore, rateOwner, callback) {
-	db.collection('res').update(
-		{ "_id": ObjectId(resID) },
-		{$push:{rate: {score: resScore,	owner: rateOwner}}},
-		 function (err, result) {
-			if (err) {
-				result = err;
-				console.log("update: " + JSON.stringify(err));
-			}
-			callback(result);
-		}
-	);
-}
-
 
 app.get('/gmap',function(req,res) {
 	if (!req.session.authenticated) {
@@ -481,6 +446,27 @@ app.get('/gmap',function(req,res) {
 	res.render("map.ejs",{lat:lat,lon:lon,title:title});
 	}
 });
+
+function addRate(db,resID,resScore,rateOwner,callback) {
+	/*db.collection('rate').insert(
+	{"_id" : resID,
+	 "rate": {"score" :resScore,
+			"owner" :rateOwner}*/
+	db.collection('res').update(
+	{"_id" : resID},
+	{$push:
+		{rate: {score :resScore,
+			owner:rateOwner}
+		}
+	}, function(err,result) {
+		if (err) {
+			result = err;
+			console.log("update: " + JSON.stringify(err));
+		}
+		callback(result);
+	}
+	);
+}
 
 
 
