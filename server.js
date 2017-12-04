@@ -114,6 +114,7 @@ app.get('/logout', function(req,res,next) {
 
 
 //create
+
 app.get('/new',function(req,res) {
 	if (!req.session.authenticated) {
 		res.render('login.ejs');
@@ -187,8 +188,12 @@ app.post('/create', function (req, res) {
 					if (req.body.lat == null || req.body.lat == '') {
 						req.body.lat = "";
 					}
+					if ((req.files.simpleFile != 'image/png') && (req.files.simpleFile != 'image/jpg')){
+						console.log('Type error');
+						res.redirect('/read');
 
-					create(db, req.session.username, req.body.name, req.body.borough, req.body.cuisine, req.body.street, req.body.building, req.body.zipcode, req.body.lon, req.body.lat, req.files.sampleFile,
+					}else{
+						create(db, req.session.username, req.body.name, req.body.borough, req.body.cuisine, req.body.street, req.body.building, req.body.zipcode, req.body.lon, req.body.lat, req.files.sampleFile,
 						function (result) {
 							db.close();
 							if (result.insertedId != null) {
@@ -199,7 +204,8 @@ app.post('/create', function (req, res) {
 								res.end(JSON.stringify(result));
 							}
 						}
-					);
+					);}
+
 				}
 
 			} else {
@@ -410,15 +416,27 @@ app.post('/change', function(req, res) {
 		if (req.body.lat == null || req.body.lat == '') {
 			req.body.lat = "";
 		}
-		commitChange(db, req.body.id, req.body.name, req.body.borough, req.body.cuisine, req.body.street, req.body.building, req.body.zipcode, req.body.lon, req.body.lat, req.files.sampleFile,
-			function (result) {
-				db.close();
-				res.status(200);
-				res.redirect('/detail?id=' + req.body.id);
-			}
+		if ((req.files.simpleFile != 'image/png') && (req.files.simpleFile != 'image/jpg')){
+						console.log('Type error');
+						res.redirect('/read');
+
+					}else{
+						commitChange(db, req.body.id, req.body.name, req.body.borough, req.body.cuisine, req.body.street, req.body.building, req.body.zipcode, req.body.lon, req.body.lat, req.files.sampleFile,
+						function (result) {
+							db.close();
+							if (result.insertedId != null) {
+								res.status(200);
+								res.redirect('/');
+							} else {
+								res.status(500);
+								res.end(JSON.stringify(result));
+							}
+						}
+					);}
+
+				}
 		);
 	});
-});
 
 function commitChange(db, id, name, borough, cuisine, street, building, zipcode, lon, lat, bfile, callback) {
 	if (bfile != undefined) {
@@ -493,7 +511,7 @@ app.post('/rate', function (req, res) {
 
 app.get('/rate', function (req, res) {
 	if (!req.session.authenticated) {
-		res.sendFile(__dirname + '/public/login.html');
+		res.sendFile(__dirname + 'login.ejs');
 	} else {
 		var resID = req.query.id;
 		res.render('rate.ejs', { res: resID });
