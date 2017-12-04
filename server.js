@@ -123,111 +123,143 @@ app.get('/new',function(req,res) {
 });
 
 
-app.post('/create', function(req, res) {
-	var criteria = {"name" : req.body.name};
-	MongoClient.connect(mongourl,function(err,db) {
-	  assert.equal(null,err);
-    	  findOneRestaurant(db,criteria,function(dbres) {
-	    if(dbres == null){
-		create(db, req.session.username, req.body.name, req.body.borough, req.body.cuisine, req.body.street, req.body.building, req.body.zipcode, req.body.lon, req.body.lat, req.files.sampleFile,
-		  function(result) {
-	        	db.close();
-		  if (result.insertedId != null) {
-			res.status(200);
-			res.redirect('/');
-		  } else {
-			res.status(500);
-			res.end(JSON.stringify(result));
+app.post('/create', function (req, res) {
+	var criteria = { "name": req.body.name };
+	MongoClient.connect(mongourl, function (err, db) {
+		assert.equal(null, err);
+		findOneRestaurant(db, criteria, function (dbres) {
+			if (dbres == null) {
+				console.log(req.body.name + ' is not existed, pending to insert DB.')
+				if (!req.files.sampleFile) {
+					console.log(req.body.name +' is going to create WITHOUT file upload.')
+					if (req.body.borough == null || req.body.borough == '') {
+						req.body.borough = "";
+					}
+					if (req.body.cuisine == null || req.body.cuisine == '') {
+						req.body.cuisine = "";
+					}
+					if (req.body.street == null || req.body.street == '') {
+						req.body.street = "";
+					}
+					if (req.body.building == null || req.body.building == '') {
+						req.body.building = "";
+					}
+					if (req.body.zipcode == null || req.body.zipcode == '') {
+						req.body.zipcode = "";
+					}
+					if (req.body.lon == null || req.body.lon == '') {
+						req.body.lon = "";
+					}
+					if (req.body.lat == null || req.body.lat == '') {
+						req.body.lat = "";
+					}
+
+					createNoFile(db, req.session.username, req.body.name, req.body.borough, req.body.cuisine, req.body.street, req.body.building, req.body.zipcode, req.body.lon, req.body.lat,
+						function (result) {
+							db.close();
+							if (result.insertedId != null) {
+								res.status(200);
+								res.redirect('/');
+							} else {
+								res.status(500);
+								res.end(JSON.stringify(result));
+							}
 						}
- 		  }
-		);
-	     } else {
-			res.redirect('/new');
-	     }
-	    });
+					);
+				} else {
+					console.log(req.body.name +' is going to create WITH file upload.')
+					if (req.body.borough == null || req.body.borough == '') {
+						req.body.borough = "";
+					}
+					if (req.body.cuisine == null || req.body.cuisine == '') {
+						req.body.cuisine = "";
+					}
+					if (req.body.street == null || req.body.street == '') {
+						req.body.street = "";
+					}
+					if (req.body.building == null || req.body.building == '') {
+						req.body.building = "";
+					}
+					if (req.body.zipcode == null || req.body.zipcode == '') {
+						req.body.zipcode = "";
+					}
+					if (req.body.lon == null || req.body.lon == '') {
+						req.body.lon = "";
+					}
+					if (req.body.lat == null || req.body.lat == '') {
+						req.body.lat = "";
+					}
+
+					create(db, req.session.username, req.body.name, req.body.borough, req.body.cuisine, req.body.street, req.body.building, req.body.zipcode, req.body.lon, req.body.lat, req.files.sampleFile,
+						function (result) {
+							db.close();
+							if (result.insertedId != null) {
+								res.status(200);
+								res.redirect('/');
+							} else {
+								res.status(500);
+								res.end(JSON.stringify(result));
+							}
+						}
+					);
+				}
+
+			} else {
+				console.log(req.body.name +' is existed alredy.')
+				res.redirect('/new');
+			}
+		});
 	});
 });
 
-function create(db,owner,name,borough,cuisine,street,building,zipcode,lon,lat,bfile,callback) {
+function create(db, owner, name, borough, cuisine, street, building, zipcode, lon, lat, bfile, callback) {
 	db.collection('res').insertOne({
-	"owner" : owner,
-	"borough" : borough,
-	"name" : name,
- 	"cuisine" : cuisine,
-	"street" : street,
-	"building" : building,
-	"zipcode" :zipcode,
-	"coor" : [lon,lat],
-	"data" : new Buffer(bfile.data).toString('base64'),
-	"mimetype" : bfile.mimetype
-	}, 
-		function(err,result) {
+		"owner": owner,
+		"borough": borough,
+		"name": name,
+		"cuisine": cuisine,
+		"street": street,
+		"building": building,
+		"zipcode": zipcode,
+		"coor": [lon, lat],
+		"data": new Buffer(bfile.data).toString('base64'),
+		"mimetype": bfile.mimetype
+	},
+		function (err, result) {
 			if (err) {
 				result = err;
 				console.log("insertOne error: " + JSON.stringify(err));
 			} else {
-		  		console.log("status : OK,");
-				console.log("_id : " + result.insertedId);
+				console.log("status : upload OK, _id :" + result.insertedId);
 			}
 			callback(result);
 		}
 	);
 }
 
-
-//api/create
-/*app.post('/api/create', function(req, res) {
-	var criteria = {"name" : req.body.name};
-	MongoClient.connect(mongourl,function(err,db) {
-	  assert.equal(null,err);
-    	  findOneRestaurant(db,criteria,function(dbres) {
-	    if(dbres == null){
-		APIcreate(db, req.session.username, req.body.name, req.body.borough, req.body.cuisine, req.body.street,
-		  function(result) {
-	        	db.close();
-		  if (result.insertedId != null) {
-			res.redirect('/');
-		  } else {
-			res.end(JSON.stringify(result));
-		  }
- 		  }
-		);
-	     } else {
-			res.redirect('/new');
-	     }
-	    });
-	});
-});
-
-function APIcreate(db,owner,name,borough,cuisine,street,building,zipcode,lon,lat,bfile,callback) {
+function createNoFile(db, owner, name, borough, cuisine, street, building, zipcode, lon, lat, callback) {
 	db.collection('res').insertOne({
-		"owner" : owner,
-		"name" : name,
-		"address" : {
-			"street" : street
-			"borough" : borough,
-	 		"cuisine" : cuisine,
-			"street" : street,
-			"building" : building,
-			"coor" : [lon,lat],
-			"data" : new Buffer(bfile.data).toString('base64'),
-			"mimetype" : bfile.mimetype
-		}
-	}, 
-		function(err,result) {
+		"owner": owner,
+		"borough": borough,
+		"name": name,
+		"cuisine": cuisine,
+		"street": street,
+		"building": building,
+		"zipcode": zipcode,
+		"coor": [lon, lat],
+	
+	},
+		function (err, result) {
 			if (err) {
 				result = err;
 				console.log("insertOne error: " + JSON.stringify(err));
 			} else {
-		  		console.log("status : OK,");
-				console.log("_id : " + result.insertedId);
+				console.log("status : upload OK, _id :" + result.insertedId);
 			}
 			callback(result);
 		}
 	);
 }
-*/
-
 
 function findOneRestaurant(db,criteria,callback) {
 		db.collection('res').findOne(criteria,function(err,result) {
