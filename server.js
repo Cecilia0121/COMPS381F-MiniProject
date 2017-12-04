@@ -121,8 +121,6 @@ app.get('/new',function(req,res) {
 		res.render('create.ejs');
 	}
 });
-
-
 app.post('/create', function (req, res) {
 	var criteria = { "name": req.body.name };
 	MongoClient.connect(mongourl, function (err, db) {
@@ -247,7 +245,8 @@ function createNoFile(db, owner, name, borough, cuisine, street, building, zipco
 		"building": building,
 		"zipcode": zipcode,
 		"coor": [lon, lat],
-	
+		//"data": new Buffer(bfile.data).toString('base64'),
+		//"mimetype": bfile.mimetype
 	},
 		function (err, result) {
 			if (err) {
@@ -387,11 +386,33 @@ function changeInfo(db,target,callback) {
 }
 
 app.post('/change', function(req, res) {
-	MongoClient.connect(mongourl,function(err,db) {
-	assert.equal(null,err);
-		commitChange(db,req.body.id, req.body.name, req.body.borough, req.body.cuisine, req.body.street, req.body.building, req.body.zipcode, req.body.lon, req.body.lat, req.files.sampleFile,
-			function(result) {
-		 		db.close();
+	MongoClient.connect(mongourl, function (err, db) {
+		assert.equal(null, err);
+
+		if (req.body.borough == null || req.body.borough == '') {
+			req.body.borough = "";
+		}
+		if (req.body.cuisine == null || req.body.cuisine == '') {
+			req.body.cuisine = "";
+		}
+		if (req.body.street == null || req.body.street == '') {
+			req.body.street = "";
+		}
+		if (req.body.building == null || req.body.building == '') {
+			req.body.building = "";
+		}
+		if (req.body.zipcode == null || req.body.zipcode == '') {
+			req.body.zipcode = "";
+		}
+		if (req.body.lon == null || req.body.lon == '') {
+			req.body.lon = "";
+		}
+		if (req.body.lat == null || req.body.lat == '') {
+			req.body.lat = "";
+		}
+		commitChange(db, req.body.id, req.body.name, req.body.borough, req.body.cuisine, req.body.street, req.body.building, req.body.zipcode, req.body.lon, req.body.lat, req.files.sampleFile,
+			function (result) {
+				db.close();
 				res.status(200);
 				res.redirect('/detail?id=' + req.body.id);
 			}
@@ -399,47 +420,50 @@ app.post('/change', function(req, res) {
 	});
 });
 
-function commitChange(db,id,name,borough,cuisine,street,building,zipcode,lon,lat,bfile,callback) {
-	if(bfile.name!= ''){
-	db.collection('res').update({"_id": ObjectId(id)},{$set:{
-	"name" : name,
-	"borough" : borough,
- 	"cuisine" : cuisine,
-	"street" : street,
-	"building" : building,
-	"zipcode" : zipcode,
-	"coor" : [lon,lat],
-	"data" : new Buffer(bfile.data).toString('base64'),
-	"mimetype" : bfile.mimetype
-	}}, function(err,result) {
-		if (err) {
-			result = err;
-			console.log("insertOne error: " + JSON.stringify(err));
-		} else {
-			callback(result);
-		} 
-	}
-	);
-	}else{
-	   db.collection('res').update({"_id": ObjectId(id)},{$set:{
-		"name" : name,
-		"borough" : borough,
- 		"cuisine" : cuisine,
-		"street" : street,
-		"building" : building,
-		"zipcode" : zipcode,
-		"coor" : [lon,lat]
-	    }}, function(err,result) {
-		if (err) {
-			result = err;
-			console.log("insertOne error: " + JSON.stringify(err));
-		} else {
-	  		callback(result);
+function commitChange(db, id, name, borough, cuisine, street, building, zipcode, lon, lat, bfile, callback) {
+	if (bfile != undefined) {
+		db.collection('res').update({ "_id": ObjectId(id) }, {
+			$set: {
+				"name": name,
+				"borough": borough,
+				"cuisine": cuisine,
+				"street": street,
+				"building": building,
+				"zipcode": zipcode,
+				"coor": [lon, lat],
+				"data": new Buffer(bfile.data).toString('base64'),
+				"mimetype": bfile.mimetype
+			}
+		}, function (err, result) {
+			if (err) {
+				result = err;
+				console.log("insertOne error: " + JSON.stringify(err));
+			} else {
+				callback(result);
+			}
 		}
-		
-	    }
-	);
-    }
+		);
+	} else {
+		db.collection('res').update({ "_id": ObjectId(id) }, {
+			$set: {
+				"name": name,
+				"borough": borough,
+				"cuisine": cuisine,
+				"street": street,
+				"building": building,
+				"coor": [lon, lat]
+			}
+		}, function (err, result) {
+			if (err) {
+				result = err;
+				console.log("insertOne error: " + JSON.stringify(err));
+			} else {
+				callback(result);
+			}
+
+		}
+		);
+	}
 }
 
 //rate
@@ -513,7 +537,6 @@ app.get('/gmap',function(req,res) {
 	res.render("map.ejs",{lat:lat,lon:lon,title:title});
 	}
 });
-
 
 
 
