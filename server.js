@@ -589,7 +589,36 @@ function deleteRes(db,target,owner,callback) {
 }
 
 
+app.post('/api/restaurant/create',function(req,res){
+    var inObj = req.body;
+    var resObj;
+    MongoClient.connect(mongourl,function(err,db) {
+        assert.equal(err,null);
+        console.log('Connected to MongoDB\n');
+        insertRestaurant(db,inObj,function(id) {
+            db.close();
+            if(id!==undefined||id!==null){
+                resObj = {
+                    status : "ok",
+                    _id: id
+                };
+                res.end(JSON.stringify(resObj));
+            }else{
+                resObj = {
+                    status : "failed"
+                };
+                res.end(JSON.stringify(resObj));
+            }
+        });
+    });
+});
 
+function insertRestaurant(db,r,callback) {
+    db.collection('restaurants').insertOne(r,function(err,result) {
+        assert.equal(err,null);
+        callback(r._id);
+    });
+}
 
 app.listen(process.env.PORT || 8099, function() {
   console.log('waiting for requests...');
